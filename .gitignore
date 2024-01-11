@@ -5,3 +5,5 @@ srv
 *.txt
 QUICGopher.md
 config
+.idea
+TestQuicClient

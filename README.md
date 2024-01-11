@@ -14,6 +14,8 @@ I do apologize for the quality of the code, though. I am certainly not an expert
 ### Build/Install
 TBD. This project isn't mature enough to have a set build process yet, and you shouldn't want to install it yet.
 ### Running
+#### NOTE: This information is not up to date. It will be updated soon with proper configuration steps.
+
 In its most basic form, run `longboat [server root]`, where `[server root]` is an optional parameter which provides the directory that contains your Gopher data.
 If this is not provided, the server root will be set to the current working directory.
 ### Gopher Data
