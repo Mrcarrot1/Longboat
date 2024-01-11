@@ -1,6 +1,8 @@
 # Longboat Gopher Server
 This is a nearly-from-scratch implementation of a server for the Gopher(+) protocol, written in F#.
 
+When finished, it aims to implement all of RFC 1431 as well as the Gopher+ reference document. At present, it supports only a subset of RFC 1431.
+
 It is one of two tools I have created which intend to provide a full Gopher experience. The other is the Rower client, written in C.
 For the rationale behind why I chose to write software for Gopher, see [that project's page](https://github.com/Mrcarrot1/rower).
 
@@ -42,6 +44,7 @@ Longboat will create these selectors:
 While it is not strictly required that there be a file named simply `.gph`, it is highly recommended that there is.
 If there is not, the server will not have a root or "main" page. Note that it does not fully conform to standard Gopher in this case.
 
+### Planned(Unfinished) Features
 Longboat will also provide pre-processing for Gopher. Preprocessing is a way to dynamically generate Gopher data on the server at time of request.
 In order to indicate that a file should be preprocessed, the file should begin with `#longboat preproc` on its own line.
 If the file should begin with this sequence but not be preprocessed, use two `#` symbols instead: `##longboat preproc` will evaluate to the literal string `"#longboat preproc"`.
