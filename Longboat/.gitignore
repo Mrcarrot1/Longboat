@@ -1,0 +1,7 @@
+*.cer
+bin
+obj
+srv
+*.txt
+QUICGopher.md
+config
