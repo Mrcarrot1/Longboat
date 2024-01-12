@@ -17,9 +17,9 @@ let getCanonicalSelector (s: string) =
     
 let createSelector (file: string) (dir:string): string =
     let relPath = Path.GetRelativePath(dir, file)
-    let path = if relPath.EndsWith ".gph" then Path.GetFileNameWithoutExtension relPath else relPath
+    let path = if relPath.EndsWith ".gph" then relPath.Substring(0, relPath.Length - 4) else relPath
     sprintf "/%s" path
-    
+
 let rec createDirSelectors dir (root: option<string>) =
     let rootDir = if root = None then dir else root.Value
     let files =
