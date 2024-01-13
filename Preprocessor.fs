@@ -7,6 +7,7 @@ module Longboat.Preprocessor
 
 open System.Diagnostics
 open System.IO
+open System.Linq
 open System.Text.RegularExpressions
 open Longboat.Config
 open Longboat.Logger
@@ -37,7 +38,7 @@ let preprocess file query =
     if lines[0].Trim() <> "#longboat preproc" then lines |> Array.fold addNewline ""
     else
         let text = Array.fold addNewline "" lines[1..]
-        let commands = Regex.Matches (text, @"\$\{[^\}]*\}")
+        let commands = (Regex.Matches (text, @"\$\{[^\}]*\}")).ToArray().DistinctBy(fun x -> x.Value)
         let replaceMatch (text: string)(mtch: Match) =
             let cmd = (mtch.Value[2..mtch.Value.Length - 2])
             text.Replace(mtch.Value, evalCmd cmd)
