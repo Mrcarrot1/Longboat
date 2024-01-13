@@ -23,7 +23,7 @@ let createSelector (file: string) (dir:string): string =
 let rec createDirSelectors dir (root: option<string>) =
     let rootDir = if root = None then dir else root.Value
     let files =
-        printfn "%s\n" dir
+        //printfn "%s\n" dir
         Directory.GetFiles dir
         |> Array.map Path.GetFullPath
         //|> Array.map(fun x -> if x.EndsWith ".gph" then Path.GetFileNameWithoutExtension x else x)

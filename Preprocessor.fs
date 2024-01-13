@@ -17,9 +17,11 @@ let evalCmd (cmd: string) =
     | "sys" ->
         let startInfo = ProcessStartInfo(splitCmd[1], splitCmd[2..] |> Array.fold (+) "")
         startInfo.RedirectStandardOutput <- true
-        Process.Start(startInfo).StandardOutput.ReadToEnd()
+        Process.Start(startInfo).StandardOutput.ReadToEnd().TrimEnd()
     | "serv" -> match splitCmd[1] with
                 | "port" -> globalConfig.port |> string
+                | "host" | "hostname" -> globalConfig.hostname
+                | "hostport" -> $"{globalConfig.hostname}\t{globalConfig.port}"
                 | "version" -> "pre-alpha"
                 | x -> 
                     logmsg $"Invalid Longboat Preprocessor command: {x}" LogLevel.Err
@@ -27,10 +29,19 @@ let evalCmd (cmd: string) =
     | x ->
         logmsg $"Invalid Longboat Preprocessor command: {x}" LogLevel.Err
         "ERROR: Invalid Longboat Preprocessor command"
-    
+
 let preprocess file query =
-    let text = File.ReadAllText file
-    for x in Regex.Matches (text, "\$\{.*\}") do
-        let cmd = x.Value[2..x.Value.Length - 2]
-        printfn "%s" cmd
-    text
+    let lines = File.ReadAllLines file
+    let addNewline s1 s2 =
+        s1 + $"{s2}\n"
+    if lines[0].Trim() <> "#longboat preproc" then lines |> Array.fold addNewline ""
+    else
+        let text = Array.fold addNewline "" lines[1..]
+        let commands = Regex.Matches (text, @"\$\{[^\}]*\}")
+        let replaceMatch (text: string)(mtch: Match) =
+            let cmd = (mtch.Value[2..mtch.Value.Length - 2])
+            text.Replace(mtch.Value, evalCmd cmd)
+        let output = 
+            seq { for c in commands -> c } 
+            |> Seq.fold replaceMatch text
+        output 

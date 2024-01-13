@@ -14,6 +14,7 @@ type serverConfiguration = { port: int; quicPort: int; enableNoHttpMessage: bool
 
 let parseConfig file =
     File.ReadAllLines file
+        |> Array.filter (fun x -> not (x.StartsWith '#'))
         |> Array.map (fun x -> 
             let split = x.Split ':'
             (split[0].Trim(), split[1].Trim())

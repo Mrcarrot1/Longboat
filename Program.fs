@@ -35,8 +35,6 @@ let handleconn(stream: Stream)(resources: Map<string, string>)(clientInfo: clien
         let bufferSize = 4096
         let buffer: byte[] = (Array.zeroCreate bufferSize)
         try
-            //use stream = handler.GetStream()
-                
             logmsg (sprintf "Accepting connection from %s(%s)" (clientInfo.endpoint.Address.ToString()) clientInfo.connType) LogLevel.Info
             
             let received = waitreturn (stream.ReadAsync(buffer, 0, bufferSize))
@@ -46,9 +44,7 @@ let handleconn(stream: Stream)(resources: Map<string, string>)(clientInfo: clien
             let bufferString =
                 seq { for i in 0 .. received - 1 -> sprintf "0x%02x " buffer[i] }
                 |> Seq.fold (+) ""
-            //printfn "Buffer: %s" bufferString
             let requestString = (localstring request).Split("\n")[0]
-            //printfn "Received string: %s" (requestString |> String.collect(fun c -> if c = '\r' then "[CR]" elif c = '\n' then "[LF]" else c.ToString()))
             let requestFields = requestString.Split '\t'
             let selector = requestFields[0]
             
@@ -59,10 +55,8 @@ let handleconn(stream: Stream)(resources: Map<string, string>)(clientInfo: clien
                 if request[request.Length - 2..request.Length - 1] <> [| byte 0x0d; byte 0x0a |] then
                     waittask (stream.WriteAsync(netstring (gophererr "Query message was too long or not formatted correctly!")).AsTask())
                 else
-                    //printfn "%s" ((getCanonicalSelector selector) |> String.collect(fun c -> if c = '\r' then "[CR]" elif c = '\n' then "[LF]" else c.ToString()))
-                    //for res in resources do printfn "%s%s -> %s" res.Key (if res.Key = getCanonicalSelector selector then "(match)" else "") res.Value
                     match Map.tryFind (getCanonicalSelector selector) resources with
-                    | Some(file) -> waitvtask (stream.WriteAsync(netstring (makeGopherText (File.ReadAllText file))))
+                    | Some(file) -> waitvtask (stream.WriteAsync(netstring (makeGopherText (preprocess file request))))
                     | None -> waitvtask (stream.WriteAsync(netstring notFound))
         with
         | e -> logmsg (sprintf "Exception when communicating with client; assuming disconnected\nError message: %s" e.Message) LogLevel.Err
@@ -90,16 +84,10 @@ let startQuicServer (listener: QuicListener) resources =
 let main args =
     //if not QuicListener.IsSupported then logmsg "The QUIC protocol is not supported on this platform" LogLevel.Warn
     printfn "Starting Longboat Gopher Server (F# Edition)"
-    printfn "%s" (evalCmd "serv port")
 
-    //printfn "HTTP Unsupported response will be: \n%s" httpUnsupported
-    
-    //let servingDir = if args.Length > 0 then args[0] else Directory.GetCurrentDirectory()
     let resources = createDirSelectors globalConfig.serveDirectory None
     logmsg "Mapped Selectors:" LogLevel.Info
     for res in resources do printfn "    %s -> %s" res.Key res.Value
-    //for res in resources do preprocess res.Value ""
-    //printfn "%s" (createSelector "/home/gopher.gph" "/")
         
     let endpoint = IPEndPoint(IPAddress.Any, globalConfig.port)
     //let quicEndpoint = IPEndPoint(IPAddress.Any, globalConfig.quicPort)
