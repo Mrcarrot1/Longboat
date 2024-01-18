@@ -41,14 +41,15 @@ let handleconn(stream: Stream)(resources: Map<string, string>)(clientInfo: clien
             
             let request = buffer[0..received - 1]
             //printfn "received %d bytes" received
-            let bufferString =
-                seq { for i in 0 .. received - 1 -> sprintf "0x%02x " buffer[i] }
-                |> Seq.fold (+) ""
+            //let bufferString =
+            //    seq { for i in 0 .. received - 1 -> sprintf "0x%02x " buffer[i] }
+            //    |> Seq.fold (+) ""
             let requestString = (localstring request).Split("\n")[0]
             let requestFields = requestString.Split '\t'
             let selector = requestFields[0]
             
             //Check to see if someone has tried to connect with a web browser and inform them that we don't like their kind here
+            //This can also be disabled in configuration to prevent running a regex match on literally every selector
             if globalConfig.enableNoHttpMessage && Regex.IsMatch(selector, "(:?GET|HEAD|POST|PUT|DELETE|CONNECT|OPTIONS|TRACE|PATCH).*HTTP.*") then
                 waitvtask (stream.WriteAsync(netstring httpUnsupported))
             else

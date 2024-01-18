@@ -27,8 +27,10 @@ let getConfigLocation(): string =
         else if File.Exists $"""{Environment.GetEnvironmentVariable "XDG_CONFIG_HOME"}/longboat/config""" then 
             $"""{Environment.GetEnvironmentVariable "XDG_CONFIG_HOME"}/longboat/config"""
         else if File.Exists "/etc/longboat/config" then "/etc/longboat/config" else ""
-    else 
-        ""
+    else
+        let path = Path.Combine(Environment.CurrentDirectory, "config")
+        logmsg (sprintf "The current platform does not have a default configuration path implementation. The path that will be used is %s" path) LogLevel.Warn
+        path
 
 let globalConfig: serverConfiguration = 
     let config = 
@@ -38,9 +40,24 @@ let globalConfig: serverConfiguration =
                 logmsg "Configuration file not found; using default settings" LogLevel.Warn
                 Map<string, string>([])
     {
-        port = if config.ContainsKey "port" then config["port"] |> int else 70;
-        quicPort = if config.ContainsKey "quicPort" then config["quicPort"] |> int else 0;
-        enableNoHttpMessage = if config.ContainsKey "enableNoHttpMessage" then config["enableNoHttpMessage"] |> bool.Parse else true;
-        serveDirectory = if config.ContainsKey "serveDirectory" then config["serveDirectory"] else (Path.Combine(Environment.CurrentDirectory, "srv"));
-        hostname = if config.ContainsKey "hostname" then config["hostname"] else System.Net.Dns.GetHostEntry("").HostName;
+        port = 
+            match config.TryFind "port" with
+            | Some(x) -> int x
+            | None -> 70
+        quicPort = 
+            match config.TryFind "quicPort" with
+            | Some(x) -> int x
+            | None -> 0
+        enableNoHttpMessage = 
+            match config.TryFind "enableNoHttpMessage" with
+            | Some(x) -> bool.Parse x
+            | None -> true
+        serveDirectory =
+            match config.TryFind "serveDirectory" with
+            | Some(x) -> x
+            | None -> Path.Combine(Environment.CurrentDirectory, "srv")
+        hostname =
+            match config.TryFind "hostname" with
+            | Some(x) -> x
+            | None -> System.Net.Dns.GetHostEntry("").HostName
     }
