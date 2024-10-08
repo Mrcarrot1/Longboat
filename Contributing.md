@@ -17,6 +17,11 @@ F# enforces most of the style conventions of this project automatically, but som
     construct on the previous line. 
 * Blank lines should be used as seems necessary to make sections of code clearer.
 * Code should not be much longer than 120 characters on a line. If it is, there should be some reasonable justification.
+* Conditional expressions(primarily `if` and `match`) should be split across lines unless their bodies are very short.
+  * For example: `if cond then 4 else 6` is acceptable, but `if Array.exists (fun x -> x > 3) arr then Array.fold
+    (*) 4 arr else Array.sum arr` is not.
+* Pipe operators should use new lines in most cases. If there are two ore more pipe operators in a chain, they should
+  always use new lines.
 
 ## Project Structure
 The structure of the codebase is largely organized around supporting the functionality in two places: initial loading,
