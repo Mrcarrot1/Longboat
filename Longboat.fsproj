@@ -8,12 +8,17 @@
 
     <ItemGroup>
         <Compile Include="Logger.fs" />
-        <Compile Include="Config.fs" />
         <Compile Include="Utils.fs" />
+        <Compile Include="Config.fs" />
         <Compile Include="GopherUtils.fs" />
         <Compile Include="GopherTypes.fs" />
         <Compile Include="Preprocessor.fs" />
-        <Compile Include="Program.fs"/>
+        <Compile Include="Connection.fs" />
+        <Compile Include="Program.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="FParsec" Version="1.1.1" />
     </ItemGroup>
 
 </Project>

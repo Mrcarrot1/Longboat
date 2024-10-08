@@ -5,10 +5,10 @@
 *)
 module Longboat.Utils
 
-open System.IO
 open System.Net.Sockets
 open System.Text
 open System.Threading.Tasks
+open System.Runtime.InteropServices
 
 ///Converts a local .NET string to a UTF-8 byte array for network use.
 ///Also replaces Unix-style LF line endings with the CRLF used by Gopher and HTTP.
@@ -39,8 +39,27 @@ let pathcmp (str1: string) (str2: string) =
         |> stripslash
         
     path1 = path2
+
+type platform =
+ | Linux
+ | FreeBSD
+ | MacOS
+ | Windows
+ | Unknown
+
+let getCurrentPlatform () =
+    if RuntimeInformation.IsOSPlatform OSPlatform.Linux then
+        Linux
+    elif RuntimeInformation.IsOSPlatform OSPlatform.FreeBSD then
+        FreeBSD
+    elif RuntimeInformation.IsOSPlatform OSPlatform.OSX then
+        MacOS
+    elif RuntimeInformation.IsOSPlatform OSPlatform.Windows then
+        Windows
+    else 
+        Unknown
     
-let waittask (t: Task) =
+let inline waittask (t: Task) =
     t
     |> Async.AwaitTask
     |> Async.RunSynchronously
@@ -67,5 +86,5 @@ let trywrite(stream: NetworkStream)(buffer: byte[]): bool =
         |> Async.RunSynchronously
         true
     with
-    | e -> false
+    | _ -> false
     

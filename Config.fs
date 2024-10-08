@@ -7,8 +7,8 @@ module Longboat.Config
 
 open System
 open System.IO
-open System.Runtime.InteropServices
 open Longboat.Logger
+open Longboat.Utils
 
 type serverConfiguration = { port: int; quicPort: int; enableNoHttpMessage: bool; serveDirectory: string; hostname: string; }
 
@@ -22,23 +22,30 @@ let parseConfig file =
         |> Map
 
 let getConfigLocation(): string =
-    if RuntimeInformation.IsOSPlatform OSPlatform.Linux then
-        if File.Exists $"{Environment.CurrentDirectory}/config" then $"{Environment.CurrentDirectory}/config"
-        else if File.Exists $"""{Environment.GetEnvironmentVariable "XDG_CONFIG_HOME"}/longboat/config""" then 
+    match getCurrentPlatform() with
+    | Linux | FreeBSD ->
+        if File.Exists $"{Environment.CurrentDirectory}/config" then 
+            $"{Environment.CurrentDirectory}/config"
+        elif File.Exists $"""{Environment.GetEnvironmentVariable "XDG_CONFIG_HOME"}/longboat/config""" then 
             $"""{Environment.GetEnvironmentVariable "XDG_CONFIG_HOME"}/longboat/config"""
-        else if File.Exists "/etc/longboat/config" then "/etc/longboat/config" else ""
-    else
+        elif File.Exists "/etc/longboat/config" then 
+            "/etc/longboat/config" 
+        else ""
+
+    | _ ->
         let path = Path.Combine(Environment.CurrentDirectory, "config")
-        logmsg (sprintf "The current platform does not have a default configuration path implementation. The path that will be used is %s" path) LogLevel.Warn
+        logmsg 
+            (sprintf "The current platform does not have a default configuration path. The path that will be used is %s" 
+                path) LogLevel.Warn
         path
 
-let globalConfig: serverConfiguration = 
+let globalConfig = 
     let config = 
         if File.Exists (getConfigLocation()) then 
-            parseConfig (getConfigLocation()) 
-            else 
-                logmsg "Configuration file not found; using default settings" LogLevel.Warn
-                Map<string, string>([])
+            parseConfig (getConfigLocation())
+        else 
+            logmsg "Configuration file not found; using default settings" LogLevel.Warn
+            Map<string, string>([])
     {
         port = 
             match config.TryFind "port" with
