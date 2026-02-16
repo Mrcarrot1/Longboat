@@ -32,11 +32,11 @@ let handleconn(stream: Stream)(resources: Map<string, string>)(clientInfo: clien
         try
             logmsg "Accepting connection from {clientInfo.endpoint.Address.ToString()}({clientInfo.connType})" 
                     LogLevel.Info
+
+            let reader = new StreamReader(stream)
+
+            let! requestString = reader.ReadLineAsync ()
             
-            let! received = stream.ReadAsync(buffer, 0, bufferSize)
-            
-            let request = buffer[0..received - 1]
-            let requestString = (localstring request).Split("\n")[0]
             let requestFields = requestString.Split '\t'
             let selector = requestFields[0]
             
@@ -47,16 +47,13 @@ let handleconn(stream: Stream)(resources: Map<string, string>)(clientInfo: clien
                 Regex.IsMatch(selector, "(:?GET|HEAD|POST|PUT|DELETE|CONNECT|OPTIONS|TRACE|PATCH).*HTTP.*") then
                 do! (stream.WriteAsync(httpUnsupported))
             else
-                if request[request.Length - 2..request.Length - 1] <> [| byte 0x0d; byte 0x0a |] then
-                    do! stream.WriteAsync(netstring (gophererr "Query message was too long or not formatted correctly!"))
-                else
-                    let query = (localstring request).TrimEnd()
-                    match Map.tryFind (getCanonicalSelector selector) resources with
-                    | Some(file) -> do! stream.WriteAsync(netstring (makeGopherText (preprocess file query)))
-                    | None -> do! stream.WriteAsync(netstring notFound)
+                let query = requestString.TrimEnd()
+                match Map.tryFind (getCanonicalSelector selector) resources with
+                | Some(file) -> do! stream.WriteAsync(netstring (makeGopherText (preprocess file query)))
+                | None -> do! stream.WriteAsync(netstring notFound)
+            reader.Dispose()
         with
         | e -> logmsg 
                 (sprintf "Exception when communicating with client; assuming disconnected\nError message: %s" e.Message) 
                 LogLevel.Err
-        stream.Dispose()
     }
